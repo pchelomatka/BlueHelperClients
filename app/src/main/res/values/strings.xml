@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BlueHelperClients</string>
+    <string name="textView">НАЧАЛЬНАЯ ТОЧКА</string>
+    <string name="textview3">КОНЕЧНАЯ ТОЧКА</string>
+    <string name="button">ПОСТРОИТЬ МАРШРУТ</string>
+    <string name="checkbox">ЗАПУСТИТЬ ПОИСК</string>
+</resources>
