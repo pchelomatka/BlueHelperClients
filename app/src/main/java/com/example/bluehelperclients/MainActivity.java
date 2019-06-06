@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextToSpeech tts;
     private Timer beaconTimeoutTimer = new Timer(true);
     private Timer testTimer = new Timer(true);
+    private Timer forRoute = new Timer(true);
     private Map<String, BeaconInfo> beaconInfos = new HashMap<>();
     private BeaconInfo nearestBeaconInfo;
     private ArrayList<Point> points = new ArrayList<Point>();
@@ -70,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static ArrayList<com.example.bluehelperclients.Response> responses = new ArrayList<com.example.bluehelperclients.Response>();
     public static ArrayList<Vector> vectors = new ArrayList<Vector>();
     public static String pointForRoute = "";
+    public static Integer counter = 0;
 
 
     @Override
@@ -153,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
             }
-        }, 10, 5000);
+        }, 10, 10000);
         map(buildingId);
         discoveryCheckBox.setChecked(true);
 
@@ -165,83 +167,102 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         String startPoint = startPointEditText.getText().toString().trim();
         String endPoint = endPointEditText.getText().toString().trim();
+        String currentNP = nearestBeaconLabel.getText().toString().trim();
+        counter=0;
 
 
         if (!startPoint.equals("") & !endPoint.equals("")) {
-            CompletableFuture.runAsync(createRoute(startPoint, endPoint));
+            if (!currentNP.equals(endPoint)) {
+                CompletableFuture.runAsync(() -> forRoute.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                createRoute(startPoint, endPoint);
+                            }
+                        });
+                    }
+                }, 10, 7500));
+            }
         } else {
             String textError = "Данные не введены";
             tts.speak(textError, TextToSpeech.QUEUE_FLUSH, null);
         }
     }
 
+
     private void createRoute(String startPoint, String endPoint) {
+        String currentPoint = nearestBeaconLabel.getText().toString().trim();
         String startPointId = "";
         String endPointId = "";
         String textDirection = "";
-        for (int i = 0; i < responses.size(); i++) {
-            if (startPoint.equals(responses.get(i).getTitle())) {
-                startPointId = responses.get(i).getId();
+        if (counter!=1) {
+            for (int i = 0; i < responses.size(); i++) {
+                if (startPoint.equals(responses.get(i).getTitle())) {
+                    startPointId = responses.get(i).getId();
+                }
             }
-        }
-        for (int i = 0; i < responses.size(); i++) {
-            if (endPoint.equals(responses.get(i).getTitle())) {
-                endPointId = responses.get(i).getId();
+            for (int i = 0; i < responses.size(); i++) {
+                if (endPoint.equals(responses.get(i).getTitle())) {
+                    endPointId = responses.get(i).getId();
+                }
             }
-        }
-        for (int i = 0; i < responses.size(); i++) {
-            for (int j = 0; j < responses.get(i).getVectors().size(); j++) {
-                if (startPointId.equals(responses.get(i).getVectors().get(j).getStartPoint()) & endPointId.equals(responses.get(i).getVectors().get(j).getEndPoint())) {
-                    if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 0) {
-                        textDirection = "Идите прямо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        break;
-                    } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) < 90 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 0) {
-                        textDirection = "Поверните правее и идите прямо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        break;
-                    } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 90) {
-                        textDirection = "Идите направо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        break;
-                    } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) < 180 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 90) {
-                        textDirection = "Сделайте почти полный оборот назад через правое плечо и идите прямо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        break;
-                    } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 180) {
-                        textDirection = "Поверните назад и идите прямо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        break;
-                    } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) < 270 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 180) {
-                        textDirection = "Сделайте почти полный оборот назад через левое плечо и идите прямо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        break;
-                    } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 270) {
-                        textDirection = "Поверните налево и идите прямо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        textDirection = "";
-                        break;
-                    } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) <= 359 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 270) {
-                        textDirection = "Поверните левее и идите прямо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        break;
-                    }
-                } else {
-                    if ((textconst.equals(endPoint))) {
-                        textDirection = "Вы пришли";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        textconst = "";
-                        break;
-                    } else if (textconst.equals("точка2") & startPoint.equals("точка3")) {
-                        textDirection = "Поверните налево и идите прямо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        textconst = "";
-                        break;
-                    } else if (textconst.equals("точка1") & endPoint.equals("точка3")) {
-                        textDirection = "Идите прямо";
-                        tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                        textconst = "";
-                        break;
+            for (int i = 0; i < responses.size(); i++) {
+                for (int j = 0; j < responses.get(i).getVectors().size(); j++) {
+                    if (startPointId.equals(responses.get(i).getVectors().get(j).getStartPoint()) & endPointId.equals(responses.get(i).getVectors().get(j).getEndPoint())) {
+                        if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 0) {
+                            textDirection = "Идите прямо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) < 90 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 0) {
+                            textDirection = "Поверните правее и идите прямо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 90) {
+                            textDirection = "Идите направо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) < 180 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 90) {
+                            textDirection = "Сделайте почти полный оборот назад через правое плечо и идите прямо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 180) {
+                            textDirection = "Поверните назад и идите прямо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) < 270 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 180) {
+                            textDirection = "Сделайте почти полный оборот назад через левое плечо и идите прямо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 270) {
+                            textDirection = "Поверните налево и идите прямо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            textDirection = "";
+                            break;
+                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) <= 359 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 270) {
+                            textDirection = "Поверните левее и идите прямо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        }
+                    } else {
+                        if ((textconst.equals(endPoint))) {
+                            textDirection = "Вы пришли";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            textconst = "";
+                            counter=1;
+                            break;
+                        } else if (textconst.equals("точка2") & endPoint.equals("точка3")) {
+                            textDirection = "Поверните налево и идите прямо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            textconst = "";
+                            break;
+                        } else if (textconst.equals("точка1") & endPoint.equals("точка3")) {
+                            textDirection = "Идите прямо";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            textconst = "";
+                            break;
+                        }
                     }
                 }
             }
