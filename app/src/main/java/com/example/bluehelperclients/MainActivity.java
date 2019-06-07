@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static ArrayList<Vector> vectors = new ArrayList<Vector>();
     public static String pointForRoute = "";
     public static Integer counter = 0;
-
+    public static String absoluteStartPoint = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,17 +158,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }, 10, 10000);
         map(buildingId);
         discoveryCheckBox.setChecked(true);
-
+        getAbsoluteStartPoint();
 
     }
 
+    public void getAbsoluteStartPoint() {
+        if (!nearestBeaconLabel.equals("")) {
+            absoluteStartPoint = nearestBeaconLabel.getText().toString().trim();
+        }
+    }
 
     @Override
     public void onClick(View v) {
         String startPoint = startPointEditText.getText().toString().trim();
         String endPoint = endPointEditText.getText().toString().trim();
         String currentNP = nearestBeaconLabel.getText().toString().trim();
-        counter=0;
+        counter = 0;
 
 
         if (!startPoint.equals("") & !endPoint.equals("")) {
@@ -197,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String startPointId = "";
         String endPointId = "";
         String textDirection = "";
-        if (counter!=1) {
+        if (counter != 1) {
             for (int i = 0; i < responses.size(); i++) {
                 if (startPoint.equals(responses.get(i).getTitle())) {
                     startPointId = responses.get(i).getId();
@@ -250,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             textDirection = "Вы пришли";
                             tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
                             textconst = "";
-                            counter=1;
+                            counter = 1;
                             break;
                         } else if (textconst.equals("точка2") & endPoint.equals("точка3")) {
                             textDirection = "Поверните налево и идите прямо";
@@ -262,15 +267,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
                             textconst = "";
                             break;
+                        } else if (absoluteStartPoint.equals("точка2") & endPoint.equals("точка1")) {
+                            textDirection = "Вы пошли неправильно, вернитесь назад";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            textconst = "";
+                            break;
                         }
                     }
                 }
             }
         }
     }
-
-
-    //CompletableFuture.runAsync(() -> * твой код *)
 
     @Override
     protected void onDestroy() {
