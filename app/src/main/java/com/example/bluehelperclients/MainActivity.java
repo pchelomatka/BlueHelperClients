@@ -71,8 +71,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static ArrayList<com.example.bluehelperclients.Response> responses = new ArrayList<com.example.bluehelperclients.Response>();
     public static ArrayList<Vector> vectors = new ArrayList<Vector>();
     public static String pointForRoute = "";
-    public static Integer counter = 0;
-    public static String absoluteStartPoint = "";
+    public static Boolean flag = false;
+    public static String absoluteStartPoint="";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,24 +159,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }, 10, 10000);
         map(buildingId);
         discoveryCheckBox.setChecked(true);
-        getAbsoluteStartPoint();
-
     }
 
-    public void getAbsoluteStartPoint() {
-        if (!nearestBeaconLabel.equals("")) {
-            absoluteStartPoint = nearestBeaconLabel.getText().toString().trim();
-        }
-    }
 
     @Override
     public void onClick(View v) {
         String startPoint = startPointEditText.getText().toString().trim();
         String endPoint = endPointEditText.getText().toString().trim();
         String currentNP = nearestBeaconLabel.getText().toString().trim();
-        counter = 0;
-
-
+        flag = false;
+        if (currentNP.equals("точка2")) {
+            absoluteStartPoint = "точка2";
+        } else {
+            absoluteStartPoint="";
+        }
         if (!startPoint.equals("") & !endPoint.equals("")) {
             if (!currentNP.equals(endPoint)) {
                 CompletableFuture.runAsync(() -> forRoute.schedule(new TimerTask() {
@@ -184,11 +181,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                createRoute(startPoint, endPoint);
+                                createRoute(startPoint, endPoint, absoluteStartPoint);
                             }
                         });
                     }
-                }, 10, 7500));
+                }, 10, 10000));
             }
         } else {
             String textError = "Данные не введены";
@@ -197,12 +194,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    private void createRoute(String startPoint, String endPoint) {
+    private void createRoute(String startPoint, String endPoint, String absoluteStartPoint) {
         String currentPoint = nearestBeaconLabel.getText().toString().trim();
         String startPointId = "";
         String endPointId = "";
         String textDirection = "";
-        if (counter != 1) {
+
+        if (flag == false) {
             for (int i = 0; i < responses.size(); i++) {
                 if (startPoint.equals(responses.get(i).getTitle())) {
                     startPointId = responses.get(i).getId();
@@ -216,11 +214,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             for (int i = 0; i < responses.size(); i++) {
                 for (int j = 0; j < responses.get(i).getVectors().size(); j++) {
                     if (startPointId.equals(responses.get(i).getVectors().get(j).getStartPoint()) & endPointId.equals(responses.get(i).getVectors().get(j).getEndPoint())) {
-                        if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 0) {
-                            textDirection = "Идите прямо";
-                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                            break;
-                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) < 90 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 0) {
+//                        if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 0) {
+//                            textDirection = "Идите прямо";
+//                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+//                            break;
+                        if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) < 90 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 0) {
                             textDirection = "Поверните правее и идите прямо";
                             tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
                             break;
@@ -240,35 +238,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             textDirection = "Сделайте почти полный оборот назад через левое плечо и идите прямо";
                             tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
                             break;
-                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 270) {
-                            textDirection = "Поверните налево и идите прямо";
-                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                            textDirection = "";
-                            break;
+//                        } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) == 270) {
+//                            textDirection = "Поверните налево и идите прямо";
+//                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+//                            textDirection = "";
+//                            break;
                         } else if (Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) <= 359 & Integer.parseInt(responses.get(i).getVectors().get(j).getDirection()) > 270) {
                             textDirection = "Поверните левее и идите прямо";
                             tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
                             break;
                         }
                     } else {
-                        if ((textconst.equals(endPoint))) {
+                        if (absoluteStartPoint.equals("точка2") & startPoint.equals("точка1")) {
+                            textDirection = "Вы пошли неправильно, вернитесь назад";
+                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
+                            textconst = "";
+                            absoluteStartPoint = "";
+                            textDirection="";
+                            break;
+                        } else if ((textconst.equals(endPoint))) {
                             textDirection = "Вы пришли";
                             tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
                             textconst = "";
-                            counter = 1;
+                            flag = true;
                             break;
                         } else if (textconst.equals("точка2") & endPoint.equals("точка3")) {
                             textDirection = "Поверните налево и идите прямо";
                             tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
                             textconst = "";
                             break;
-                        } else if (textconst.equals("точка1") & endPoint.equals("точка3")) {
+                        } else if (textconst.equals("точка1") & endPoint.equals("точка3") & absoluteStartPoint.equals("")) {
                             textDirection = "Идите прямо";
-                            tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
-                            textconst = "";
-                            break;
-                        } else if (absoluteStartPoint.equals("точка2") & endPoint.equals("точка1")) {
-                            textDirection = "Вы пошли неправильно, вернитесь назад";
                             tts.speak(textDirection, TextToSpeech.QUEUE_FLUSH, null);
                             textconst = "";
                             break;
