@@ -256,6 +256,65 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
         }
+
+        while (true) {
+            if (endPoint.equals("точка7")) {
+                if (startPoint.equals("точка1")) {
+                    direction = "Идите прямо";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                } else if (startPoint.equals("точка2")) {
+                    direction = "Поверните налево и идите прямо";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                } else if (startPoint.equals("точка5")) {
+                    direction = "Поверните направо и идите прямо";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                } else if (startPoint.equals("точка6")) {
+                    direction = "Поверните налево и идите прямо";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                } else if (startPoint.equals(endPoint)) {
+                    direction = "Вы пришли";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                } else if (startPoint.equals("точка4") | startPoint.equals("точка3")) {
+                    direction = "Вы пошли неправильно. Вернитесь назад";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                }
+            } else if (endPoint.equals("точка3")) {
+                if (startPoint.equals("точка1")) {
+                    direction = "Идите прямо";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                } else if (startPoint.equals("точка2")) {
+                    direction = "Поверните направо и идите прямо";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                } else if (startPoint.equals(endPoint)) {
+                    direction = "Вы пришли";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                } else if (startPoint.equals("точка4") | startPoint.equals("точка5")) {
+                    direction = "Вы пошли неправильно. Вернитесь назад";
+                    tts.speak(direction, TextToSpeech.QUEUE_FLUSH, null);
+                    direction = "";
+                    break;
+                }
+            }
+        }
+
 //            for (int i = 0; i < responses.size(); i++) {
 ////                for (int j = 0; j < responses.get(i).getVectors().size(); j++) {
 ////                    if (startPointId.equals(responses.get(i).getVectors().get(j).getStartPoint()) & endPointId.equals(responses.get(i).getVectors().get(j).getEndPoint())) {
